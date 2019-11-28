@@ -1,0 +1,72 @@
+/*
+Project history:
+OPEN:
+- implement MQTT
+- implement clock (NTP-server or RTC)
+- use time stamps
+
+V 0.201:
+	- Added support for MQTT (basic client functions)
+	- Array of OpenTherm parameters will only be updated, if parameter changes (update flag introduced)
+	- Separated strings for MQTT from MonitorBuffer array to save RAM (uses PROGMEM now)
+	- Added entries to MonitoringBuffer für each OpenTherm status flag 
+
+V 0.200:  
+    New start based on MEGA256 and interrupts; some code taken from Freescale board project;
+    MEGA is used to have more ressources for an integration with FHEM (protocols are still tbd)
+    Options are: MQTT, HTTP (longpoll?), Telnet, USB or a combination of them
+    First step will be to rewrite code to use 2 interrupts on MEGA for OpenTherm protocol timing 
+    To avoid conficts with other code or libraries the following timers are used:
+    Timer 3:  for sending data to heating (generating interrupts @ 2kHz for Manchester coding) and for messuring heating reply timeout
+    Timer 4:  trigger to send new request to heating @ 1Hz (may be obsolete and covered by polling in main loop)
+
+	Topics identified to be worked on:
+	- how to deal with an unvalid or missing reply regarding a single sensor value
+		- repeat request ? if yes: how often ?
+		- update variable (to what value) or leave it on last value (with timestamp ? --> fhem??) ?
+		- track errors ?	--> counters for successful and unsuccessful dialogues !!!
+	- make slave reply details available to main loop (global variables)
+	- start slave reply timeout interrupt at end of master transmission (load OTA? register and reset counter)
+	- stop slave reply timeout interrupt in case a reply was received  (disable interrupt)
+	- handle slave reply timeout interrupt: ISR, set status (which one ??), disable interrupt 
+
+
+V 0.104:  additional code rewriting to use just one time interrupt
+V 0.103:  restarted coding to get rid of old code fragments no longer needed
+V 0.102:  started adding OpenTherm.h 
+V 0.101:  modified to support interrupts for master sending messages to slave
+V 0.100:  added code for send and receive buffer
+V 0.82: code hanged with first interrupt so first step is to remove all serial.print from interrupt routine
+V 0.8:  started implementing receive routines; increased speed of serial communication for better debugging
+V 0.7:  transmitting a standard frame seems to work; not always receiving a reply from heating
+V 0.6:  added parity bit routine and improve transmit routine
+
+*/
+
+
+
+
+
+		switch (_data_id) {
+		  case 17 :           // get CH flame relative modulation level
+			OT_RelModulationLevel = DataID2Float( _value);
+		  break;
+		  case 18 :           // get CH water pressure
+			OT_WaterPressure = DataID2Float( _value);
+		  break;
+		  case 25 :           // get CH flow water temperature from boiler (°C)
+			OT_BoilerWaterTemperature = DataID2Float( _value);
+		  break;
+		  case 28 :           // get CH return water temperature to boiler (°C)
+			OT_ReturnWaterTemperature = DataID2Float( _value);
+		  break;
+		  case 26 :           // get DHW return water temperature to boiler (°C)
+			OT_DHWTemperature = DataID2Float( _value);
+		  break;
+		  case 19 :           // get DHW water flow rate for hot water (l/min)
+			OT_DHWFlowRate = DataID2Float( _value);
+		  break;
+		  default :
+		  
+		  break;
+		}   // end of switch(_data_id)
