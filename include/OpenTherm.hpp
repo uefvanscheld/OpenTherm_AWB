@@ -4,12 +4,16 @@
 **********************************************************
 */
 
+#ifndef OpenTherm_h
+#define OpenTherm_h
+
+
 // define OpenTherm message structure 
 typedef struct
 {
-	byte			id;		// message ID defines the request or command sent
-	byte			type;	// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
-	unsigned int	value;	// data sent or received; may be interpreted in different ways depending on message ID (s. OpenTherm protocol reference)
+	unsigned char			id;		// message ID defines the request or command sent
+	unsigned char			type;	// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
+	unsigned int			value;	// data sent or received; may be interpreted in different ways depending on message ID (s. OpenTherm protocol reference)
 } OT_message;
 
 // define OpenTherm parameter data types
@@ -18,36 +22,36 @@ typedef enum {both, highbyte, lowbyte} ByteType;
 
 
 // define message types sent by master and slave
-const byte	MSTR_RD_DTA	= B000;	// Master sends a read message to slave
-const byte	MSTR_WRT_DTA = B001;	// Master sends a write message to slave
-const byte	MSTR_INVLD 	= B010;		// Master sends a invalid data message to slave; not really used
-const byte	SLV_RD_ACK	= B100;		// Slave sends a read acknowledge message to master
-const byte	SLV_WRT_ACK = B101;		// Slave sends a write acknowledgemessage to master
-const byte	SLV_DTA_INVLD = B110;	// Slave indicates that data sent by master was invalid
-const byte	SLV_ID_INVLD = B111;	// Slave indicates that message ID sent by master was invalid or unknown
+const unsigned char	MSTR_RD_DTA	= 0b000;	// Master sends a read message to slave
+const unsigned char	MSTR_WRT_DTA = 0b001;	// Master sends a write message to slave
+const unsigned char	MSTR_INVLD 	= 0b010;		// Master sends a invalid data message to slave; not really used
+const unsigned char	SLV_RD_ACK	= 0b100;		// Slave sends a read acknowledge message to master
+const unsigned char	SLV_WRT_ACK = 0b101;		// Slave sends a write acknowledgemessage to master
+const unsigned char	SLV_DTA_INVLD = 0b110;	// Slave indicates that data sent by master was invalid
+const unsigned char	SLV_ID_INVLD = 0b111;	// Slave indicates that message ID sent by master was invalid or unknown
 
 // STATUS BITS FOR MASTER
-const byte  CH_Enabled  = B00000001;  // for message ID=0: set heating enabled
-const byte  DHW_Enabled = B00000010;  // for message ID=0: set hot water enabled
-byte  MSTR_STATUS = DHW_Enabled;     // Only enable domestic hot water
+const unsigned char  CH_Enabled  = 0b00000001;  // for message ID=0: set heating enabled
+const unsigned char  DHW_Enabled = 0b00000010;  // for message ID=0: set hot water enabled
+unsigned char  MSTR_STATUS = DHW_Enabled;     // Only enable domestic hot water
 
 // STATUS BITS FOR SLAVE
-const byte  CH_Active  = B00000010;  // for message ID=0: set heating enabled
-const byte  DHW_Active = B00000100;  // for message ID=0: set hot water enabled
+const unsigned char  CH_Active  = 0b00000010;  // for message ID=0: set heating enabled
+const unsigned char  DHW_Active = 0b00000100;  // for message ID=0: set hot water enabled
 
-byte  SLV_STATUS = 0;
+unsigned char  SLV_STATUS = 0;
 
 // define structure for message buffer for OpenTherm communication
 typedef struct
 {
-	int8_t			s_prio;			// controls how often a specific request is sent 
-	byte			s_id;			// message ID defines the request or command sent
-	byte			s_type;			// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
+	unsigned char			s_prio;			// controls how often a specific request is sent 
+	unsigned char			s_id;			// message ID defines the request or command sent
+	unsigned char			s_type;			// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
 	unsigned int	s_value;		// data sent or received; may be interpreted in different ways depending on message ID (s. OpenTherm protocol reference)
-	byte			r_id;			// message ID defines the request or command sent
-	byte			r_type;			// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
+	unsigned char			r_id;			// message ID defines the request or command sent
+	unsigned char			r_type;			// type of message: Master <-/-> Slave or Read/Write; 3 bits used filled with spare bits
 	unsigned int	r_value;		// data sent or received; may be interpreted in different ways depending on message ID (s. OpenTherm protocol reference)
-	boolean			changed;		// 'true' indicates that parameter changed to a new value; introduced to reduce traffic load; set during frame analysis, reset by MQTT publish routine
+	bool			changed;		// 'true' indicates that parameter changed to a new value; introduced to reduce traffic load; set during frame analysis, reset by MQTT publish routine
 	unsigned long   tmstp_rec;		// timestamp when received last valid/successful message of this type (=ID)
 	unsigned int	err_cnt;		// errors occurred since last successfully received message of this ID; indicator that value might not be valid meanwhile
 	char			topic[10];		// used for MQTT to assign parameter to topics
@@ -55,13 +59,13 @@ typedef struct
 	
 } OT_Com_message;
 	
-volatile int16_t	MB_pointer = 0;						// index of the next message to be read or write from monitoring buffer
-volatile byte		prio_num = 4;						// number of prioity levels used
-volatile byte		prio_pointer[4] = {0, 0, 0, 0};		// vector of indices to MonitorBuffer one for each priority
-volatile byte		prio_index = 0;						// index of prio_pointer holding current priority level
-const int16_t		na = -1;							// to prevent this parameter to be requested explicitly
+volatile short int	MB_pointer = 0;						// index of the next message to be read or write from monitoring buffer
+volatile unsigned char		prio_num = 4;						// number of prioity levels used
+volatile unsigned char		prio_pointer[4] = {0, 0, 0, 0};		// vector of indices to MonitorBuffer one for each priority
+volatile unsigned char		prio_index = 0;						// index of prio_pointer holding current priority level
+const short int		na = -1;							// to prevent this parameter to be requested explicitly
 
-const byte			MB_length = 10;	// number of messages in the buffer of monitoring messages
+const unsigned char			MB_length = 10;	// number of messages in the buffer of monitoring messages
 // set prio to 'na' to prevent parameter to be requested from slave (used to keep e.g. fault flags in buffer)
 volatile OT_Com_message MonitorBuffer[] = 
 {  /*  
@@ -111,24 +115,25 @@ volatile float OT_ReturnWaterTemperature; // -40..127 °C, f8.8
 volatile float OT_DHWFlowRate;          // 0..16 l/min, f8.8
 volatile float OT_DHWTemperature;       // -40..127 °C, f8.8
 // Configuration
-volatile boolean  OT_CHEnabled;        // Central heating
-volatile boolean  OT_DHWEnabled;       // Domestic hot water
-volatile boolean  OT_CoolingEnabled;   // Cooling enabled ?
-volatile boolean  OT_OTCEnabled;       // Outside temperature control
-volatile boolean  OT_Fault;            // Fault indicator
+volatile bool  OT_CHEnabled;        // Central heating
+volatile bool  OT_DHWEnabled;       // Domestic hot water
+volatile bool  OT_CoolingEnabled;   // Cooling enabled ?
+volatile bool  OT_OTCEnabled;       // Outside temperature control
+volatile bool  OT_Fault;            // Fault indicator
 
 volatile int      OT_DiagnosticCode;   // Diagnostic / service code
-volatile boolean  OT_Fault_ServiceRequest;
-uint8_t           OT_Fault_ServiceRequest_Mask = 0x01;
-volatile boolean  OT_Fault_LockoutReset;
-uint8_t           OT_Fault_LockoutReset_Mask = 0x02;
-volatile boolean  OT_Fault_LowWaterPressure;
-uint8_t           OT_Fault_LowWaterPressure_Mask = 0x04;
-volatile boolean  OT_Fault_GasFlame;
-uint8_t           OT_Fault_GasFlame_Mask = 0x08;
-volatile boolean  OT_Fault_AirPressure;
-uint8_t           OT_Fault_AirPressure_Mask = 0x10;
-volatile boolean  OT_Fault_WaterOverTemperatur;
-uint8_t           OT_Fault_WaterOverTemperatur_Mask = 0x20;
+volatile bool  OT_Fault_ServiceRequest;
+unsigned char           OT_Fault_ServiceRequest_Mask = 0x01;
+volatile bool  OT_Fault_LockoutReset;
+unsigned char           OT_Fault_LockoutReset_Mask = 0x02;
+volatile bool  OT_Fault_LowWaterPressure;
+unsigned char           OT_Fault_LowWaterPressure_Mask = 0x04;
+volatile bool  OT_Fault_GasFlame;
+unsigned char           OT_Fault_GasFlame_Mask = 0x08;
+volatile bool  OT_Fault_AirPressure;
+unsigned char           OT_Fault_AirPressure_Mask = 0x10;
+volatile bool  OT_Fault_WaterOverTemperatur;
+unsigned char           OT_Fault_WaterOverTemperatur_Mask = 0x20;
 
+#endif
 

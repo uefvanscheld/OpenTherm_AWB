@@ -28,8 +28,9 @@ V 0.6:  added parity bit routine and improve transmit routine
 
 #include <PubSubClient.h>     // add MQTT support
 
-#include "OpenTherm.h"        // add OpenTherm support
-#include "Includes.h"         // add some general stuff
+#include "OpenTherm.hpp"        // add OpenTherm support
+#include "Includes.hpp"         // add some general stuff
+#include "Helper.hpp"         // add some general stuff
 
 //#include <QueueArray.h>		  // DISBALED FOR NOW: include queue library header
 #include <avr/interrupt.h> 	  // used for interrupt programming
